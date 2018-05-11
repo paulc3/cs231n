@@ -62,6 +62,10 @@ prev_emotion = None
 with open('sorted_raw_data.csv', 'r') as file:
 	reader = csv.reader(file)
 	for emotion, url, downvotes, upvotes in reader:
+
+		if emotion == 'amusement': continue
+		if instances_of_label[emotion] > 500: continue
+
 		if not has_sufficient_upvotes(float(downvotes), float(upvotes)):
 			insufficent_upvotes += 1
 			continue
