@@ -1,2 +1,4 @@
 *.[oa]
 *~
+data/deepemotion/raw/*
+data/deepemotion/tfrecords/*
