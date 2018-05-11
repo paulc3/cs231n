@@ -18,4 +18,3 @@ next_element = iterator.get_next()
 with tf.Session() as sess:
 	sess.run(iterator.initializer)
 	images, labels = sess.run(next_element) # shapes [N, H, W, C] and [N,]
-	

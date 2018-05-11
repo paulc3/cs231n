@@ -94,9 +94,6 @@ with open('sorted_raw_data.csv', 'r') as file:
 		img = Image.fromarray(image.eval(session=tf.Session()), 'RGB')	# leverage PIL.Image lib
 		img.save(image_path)
 
-		if good_urls > 1000: 
-			break
-
 writer.close()
 print("insufficent_upvotes: " + str(insufficent_upvotes))
 print("sufficient_upvotes: " + str(sufficient_upvotes))
