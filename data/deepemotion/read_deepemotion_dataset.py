@@ -21,7 +21,7 @@ EMOTION_TO_LABEL = {
 	'sadness': 7
 }
 
-disk_filepath = "/Volumes/Frank's Hard Drive/Stanford 2017-2018/cs231n/data/deepemotion"
+disk_filepath = "./raw"
 
 def has_sufficient_upvotes(downvotes, upvotes):
 	return upvotes + downvotes > 0 and upvotes / (upvotes + downvotes) > 0.75
@@ -56,7 +56,8 @@ bad_urls = 0
 instances_of_label = Counter()
 total_height = 0
 total_width = 0
-writer = tf.python_io.TFRecordWriter('data.tfrecords')
+writer = None
+prev_emotion = None
 
 with open('sorted_raw_data.csv', 'r') as file:
 	reader = csv.reader(file)
@@ -87,7 +88,10 @@ with open('sorted_raw_data.csv', 'r') as file:
 		image = tf.image.resize_image_with_crop_or_pad(image, 224, 224)
 
 		# convert this example to TFRecord and write to data.tfrecord file
-		# write_to_tfrecord_file(image, label)
+		if emotion != prev_emotion:
+			writer = tf.python_io.TFRecordWriter('./tfrecords/{}.tfrecords'.format(emotion))
+			prev_emotion = emotion
+		write_to_tfrecord_file(image, label)
 
 		# write image to disk
 		image_path = '{}/{}/{}-{}.jpg'.format(disk_filepath, emotion, emotion, instances_of_label[emotion])
