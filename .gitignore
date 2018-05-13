@@ -1,4 +1,3 @@
 *.[oa]
 *~
-data/deepemotion/raw/*
-data/deepemotion/tfrecords/*
+data/deepemotion/inception-resnet/*.pb

@@ -1,0 +1,8 @@
+amusement
+anger
+awe
+contentment
+disgust
+excitement
+fear
+sadness

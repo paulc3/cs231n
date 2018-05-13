@@ -83,6 +83,8 @@ with open('sorted_raw_data.csv', 'r') as file:
                if not has_sufficient_upvotes(float(downvotes), float(upvotes)):
                      insufficent_upvotes += 1
                      continue
+               if emotion == "awe" or emotion == "anger" or emotion == "amusement":
+                     continue
                sufficient_upvotes += 1
                instances_of_label[emotion] += 1
 
