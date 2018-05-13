@@ -101,13 +101,6 @@ with open('sorted_raw_data.csv', 'r') as file:
                      bad_urls += 1
                      continue
 
-               # Write image to disk.
-               image_path = '{}/{}/{}-{}.jpg'.format(
-                   disk_filepath, emotion, emotion, instances_of_label[emotion])
-               img = Image.fromarray(image, 'RGB')
-               # leverage PIL.Image lib
-               img.save(image_path)
-
                # convert this example to TFRecord and write to data.tfrecord file
                if emotion != prev_emotion:
                      writer = tf.python_io.TFRecordWriter(
@@ -117,6 +110,13 @@ with open('sorted_raw_data.csv', 'r') as file:
                      images_directory = '{}/{}'.format(disk_filepath, emotion)
                      if not os.path.exists(images_directory):
                          os.mkdir(images_directory)
+
+               # Write image to disk.
+               image_path = '{}/{}/{}-{}.jpg'.format(
+                   disk_filepath, emotion, emotion, instances_of_label[emotion])
+               img = Image.fromarray(image, 'RGB')
+               # leverage PIL.Image lib
+               img.save(image_path)
 
                write_to_tfrecord_file(image, label)
 
