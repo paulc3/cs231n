@@ -758,12 +758,12 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
   with tf.name_scope(layer_name):
     with tf.name_scope('weights'):
       initial_value = tf.truncated_normal(
-          [bottleneck_tensor_size, 1024], stddev=0.001)
+          [bottleneck_tensor_size, 1536], stddev=0.001)
       layer_weights = tf.Variable(initial_value, name='second_last_weights')
       variable_summaries(layer_weights)
 
     with tf.name_scope('biases'):
-      layer_biases = tf.Variable(tf.zeros([1024]), name='second_last_biases')
+      layer_biases = tf.Variable(tf.zeros([1536]), name='second_last_biases')
       variable_summaries(layer_biases)
 
     with tf.name_scope('Wx_plus_b'):
@@ -779,7 +779,7 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
   with tf.name_scope(layer_name):
     with tf.name_scope('weights'):
       initial_value = tf.truncated_normal(
-          [1024, class_count], stddev=0.001)
+          [1536, class_count], stddev=0.001)
       layer_weights = tf.Variable(initial_value, name='final_weights')
       variable_summaries(layer_weights)
 
