@@ -752,12 +752,34 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     ground_truth_input = tf.placeholder(
         tf.int64, [batch_size], name='GroundTruthInput')
 
+
+  layer_name = 'second_last_retrain_ops'
+  # Organizing the following ops so they are easier to see in TensorBoard.
+  with tf.name_scope(layer_name):
+    with tf.name_scope('weights'):
+      initial_value = tf.truncated_normal(
+          [bottleneck_tensor_size, 1024], stddev=0.001)
+      layer_weights = tf.Variable(initial_value, name='second_last_weights')
+      variable_summaries(layer_weights)
+
+    with tf.name_scope('biases'):
+      layer_biases = tf.Variable(tf.zeros([1024]), name='second_last_biases')
+      variable_summaries(layer_biases)
+
+    with tf.name_scope('Wx_plus_b'):
+      logits = tf.matmul(bottleneck_input, layer_weights) + layer_biases
+      tf.summary.histogram('pre_activations', logits)
+
+    with tf.name_scope('Relu_activation'):
+      relu_activiated =tf.nn.relu(logits, name= 'Relu')
+      tf.summary.histogram('final_relu_activation')
+
   # Organizing the following ops so they are easier to see in TensorBoard.
   layer_name = 'final_retrain_ops'
   with tf.name_scope(layer_name):
     with tf.name_scope('weights'):
       initial_value = tf.truncated_normal(
-          [bottleneck_tensor_size, class_count], stddev=0.001)
+          [1024, class_count], stddev=0.001)
       layer_weights = tf.Variable(initial_value, name='final_weights')
       variable_summaries(layer_weights)
 
