@@ -774,9 +774,9 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
       relu_activiated =tf.nn.relu(logits, name= 'Relu')
       tf.summary.histogram('final_relu_activation', relu_activiated)
 
-    print("\n\n" * 10)
-    print(str(bottleneck_input))
-    print("\n\n" * 10)
+    # print("\n\n" * 10)
+    # print(str(bottleneck_input))
+    # print("\n\n" * 10)
 
   # Organizing the following ops so they are easier to see in TensorBoard.
   layer_name = 'final_retrain_ops'
@@ -792,7 +792,7 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
       variable_summaries(layer_biases)
 
     with tf.name_scope('Wx_plus_b'):
-      logits = tf.matmul(bottleneck_input, layer_weights) + layer_biases
+      logits = tf.matmul(relu_activiated, layer_weights) + layer_biases
       tf.summary.histogram('pre_activations', logits)
 
   final_tensor = tf.nn.softmax(logits, name=final_tensor_name)
