@@ -772,7 +772,7 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
 
     with tf.name_scope('Relu_activation'):
       relu_activiated =tf.nn.relu(logits, name= 'Relu')
-      tf.summary.histogram('final_relu_activation')
+      tf.summary.histogram('final_relu_activation', relu_activiated)
 
   # Organizing the following ops so they are easier to see in TensorBoard.
   layer_name = 'final_retrain_ops'
