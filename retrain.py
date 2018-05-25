@@ -755,7 +755,7 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
   input_size = bottleneck_tensor_size
   input_mat = bottleneck_input
   for i in range(3):
-    output_size = [1536,1024,1024]
+    output_size = [1536,1024,512]
     layer_name = str(i) + "_last_retrain_ops"
     with tf.name_scope(layer_name):
       with tf.name_scope('weights'):
