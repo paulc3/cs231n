@@ -873,7 +873,7 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
   for label in test_ground_truth:
     normalizer[label] += 1
 
-  normalized_confusion_matrix = confusion_matrix / normalizer[:,None]
+  normalized_confusion_matrix = confusion_matrix / normalizer
 
   print("Normalized confusion matrix: ")
   print(normalized_confusion_matrix)
