@@ -127,6 +127,7 @@ import os.path
 import random
 import re
 import sys
+import matplotlib.pyplot as plt
 
 import numpy as np
 import tensorflow as tf
@@ -752,49 +753,11 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     ground_truth_input = tf.placeholder(
         tf.int64, [batch_size], name='GroundTruthInput')
 
-  input_size = bottleneck_tensor_size
-  input_mat = bottleneck_input
-  output_sizes = [1536, 1024, 1024, 512]
-  for i in range(len(output_sizes)):
-    layer_name = str(i) + "_last_retrain_ops"
-    with tf.name_scope(layer_name):
-      with tf.name_scope('weights'):
-        initial_value = tf.truncated_normal(
-            [input_size, output_sizes[i]], stddev=0.001)
-        layer_weights = tf.Variable(initial_value, name=str(i) + '_last_weights')
-        variable_summaries(layer_weights)
-
-      with tf.name_scope('biases'):
-        layer_biases = tf.Variable(tf.zeros([output_sizes[i]]), name=str(i) + '_last_biases')
-        variable_summaries(layer_biases)
-
-      with tf.name_scope('Wx_plus_b'):
-        logits = tf.matmul(input_mat, layer_weights) + layer_biases
-        tf.summary.histogram(str(i) + '_pre_activations', logits)
-
-      with tf.name_scope('Relu_activation'):
-        relu_activated =tf.nn.relu(logits, name= 'final_relu_' + str(i))
-        tf.summary.histogram(str(i) + '_final_relu_activation', relu_activated)
-      input_mat = relu_activated
-      input_size = output_sizes[i]
-
-  # Organizing the following ops so they are easier to see in TensorBoard.
-  layer_name = 'final_retrain_ops'
-  with tf.name_scope(layer_name):
-    with tf.name_scope('weights'):
-      initial_value = tf.truncated_normal(
-          [input_size, class_count], stddev=0.001)
-      layer_weights = tf.Variable(initial_value, name='final_weights')
-      variable_summaries(layer_weights)
-
-    with tf.name_scope('biases'):
-      layer_biases = tf.Variable(tf.zeros([class_count]), name='final_biases')
-      variable_summaries(layer_biases)
-
-    with tf.name_scope('Wx_plus_b'):
-      logits = tf.matmul(input_mat, layer_weights) + layer_biases
-      tf.summary.histogram('pre_activations', logits)
-
+  regularizer = tf.contrib.layers.l2_regularizer(scale=0.01)
+  hidden_output = tf.layers.dense(
+	bottleneck_input, 100, activation=tf.nn.relu, kernel_regularizer=regularizer,
+	name='hidden_layer')
+  logits = tf.layers.dense(hidden_output, 8, kernel_regularizer=regularizer, name='scores_layer')
   final_tensor = tf.nn.softmax(logits, name=final_tensor_name)
 
   # The tf.contrib.quantize functions rewrite the graph in place for
@@ -817,11 +780,14 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     cross_entropy_mean = tf.losses.sparse_softmax_cross_entropy(
         labels=ground_truth_input, logits=logits)
 
+  l2_loss = tf.losses.get_regularization_loss()
+
   tf.summary.scalar('cross_entropy', cross_entropy_mean)
+  tf.summary.scalar('l2_loss', l2_loss)
 
   with tf.name_scope('train'):
     optimizer = tf.train.AdamOptimizer(FLAGS.learning_rate)
-    train_step = optimizer.minimize(cross_entropy_mean)
+    train_step = optimizer.minimize(cross_entropy_mean + l2_loss)
 
   return (train_step, cross_entropy_mean, bottleneck_input, ground_truth_input,
           final_tensor)
@@ -863,10 +829,12 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
     resized_image_tensor: The input node of the recognition graph.
     bottleneck_tensor: The bottleneck output layer of the CNN graph.
   """
+  # NOTE(VPCARROLL): CHANGE THE FOURTH PARAM TO TEST IF YOU ACTUALLY WANT TO RUN AGAINST
+  # THE TEST SET!
   test_bottlenecks, test_ground_truth, test_filenames = (
       get_random_cached_bottlenecks(train_session, image_lists,
                                     FLAGS.test_batch_size,
-                                    'testing', FLAGS.bottleneck_dir,
+                                    'validation', FLAGS.bottleneck_dir,
                                     FLAGS.image_dir, jpeg_data_tensor,
                                     decoded_image_tensor, resized_image_tensor,
                                     bottleneck_tensor, FLAGS.tfhub_module))
@@ -879,15 +847,41 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
           bottleneck_input: test_bottlenecks,
           ground_truth_input: test_ground_truth
       })
-  tf.logging.info('Final test accuracy = %.1f%% (N=%d)' %
+  tf.logging.info('Final validation accuracy = %.1f%% (N=%d)' %
                   (test_accuracy * 100, len(test_bottlenecks)))
 
+  # Gathering data for confusion matrix...
+  confusion_matrix = np.zeros((class_count, class_count))
+
   if FLAGS.print_misclassified_test_images:
-    tf.logging.info('=== MISCLASSIFIED TEST IMAGES ===')
+    tf.logging.info('=== MISCLASSIFIED VALIDATION IMAGES ===')
     for i, test_filename in enumerate(test_filenames):
       if predictions[i] != test_ground_truth[i]:
+        confusion_matrix[test_ground_truth[i]][predictions[i]] += 1
         tf.logging.info('%70s  %s' % (test_filename,
                                       list(image_lists.keys())[predictions[i]]))
+
+  print("Confusion matrix: ")
+  print(confusion_matrix)
+  print("Classification errors by category: ")
+  print(np.sum(confusion_matrix, axis=1))
+  print("Num images misclassified as this category: ")
+  print(np.sum(confusion_matrix, axis=0))
+  np.savetxt('confusion_matrix', confusion_matrix)
+
+  normalizer = np.zeros((class_count))
+  for label in test_ground_truth:
+    normalizer[label] += 1
+
+  normalized_confusion_matrix = confusion_matrix / normalizer
+
+  print("Normalized confusion matrix: ")
+  print(normalized_confusion_matrix)
+  print("Classification errors by category (normalized by category size): ")
+  print(np.sum(normalized_confusion_matrix, axis=1))
+  print("Num images misclassified as this category (normalized by category size): ")
+  print(np.sum(normalized_confusion_matrix, axis=0))
+  np.savetxt('normalized_confusion_matrix', normalized_confusion_matrix)
 
 
 def build_eval_session(module_spec, class_count):
