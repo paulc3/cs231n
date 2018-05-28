@@ -138,7 +138,7 @@ FLAGS = None
 MAX_NUM_IMAGES_PER_CLASS = 2 ** 27 - 1  # ~134M
 
 # The location where variable checkpoints will be stored.
-CHECKPOINT_NAME = '/tmp/_retrain_checkpoint'
+CHECKPOINT_NAME = '/tmp/_retrain_checkpoint_' + str(random.randint(0, 1000000))
 
 # A module is understood as instrumented for quantization with TF-Lite
 # if it contains any of these ops.
@@ -753,10 +753,12 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     ground_truth_input = tf.placeholder(
         tf.int64, [batch_size], name='GroundTruthInput')
 
-  regularizer = tf.contrib.layers.l2_regularizer(scale=0.01)
-  hidden_output = tf.layers.dense(
-	bottleneck_input, 100, activation=tf.nn.relu, kernel_regularizer=regularizer,
-	name='hidden_layer')
+  regularizer = tf.contrib.layers.l2_regularizer(scale=FLAGS.regularization_rate)
+  layer_sizes = FLAGS.hidden_layer_sizes.split(",")
+  for i, layer in enumerate(layer_sizes):
+    hidden_output = tf.layers.dense(
+	bottleneck_input, int(layer), activation=tf.nn.relu, kernel_regularizer=regularizer,
+	name=('hidden_layer_' + str(i)))
   logits = tf.layers.dense(hidden_output, 8, kernel_regularizer=regularizer, name='scores_layer')
   final_tensor = tf.nn.softmax(logits, name=final_tensor_name)
 
@@ -853,6 +855,12 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
   # Gathering data for confusion matrix...
   confusion_matrix = np.zeros((class_count, class_count))
 
+  # The supplementary confusion matrix is only used for binary classification.
+  supplementary_confusion_matrix = np.zeros((8, 2))
+
+  emotion_types = (['amusement', 'anger', 'awe', 'contentment', 'disgust', 'excitement',
+                    'fear', 'sadness']) 
+
   if FLAGS.print_misclassified_test_images:
     tf.logging.info('=== MISCLASSIFIED VALIDATION IMAGES ===')
     for i, test_filename in enumerate(test_filenames):
@@ -860,28 +868,40 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
         confusion_matrix[test_ground_truth[i]][predictions[i]] += 1
         tf.logging.info('%70s  %s' % (test_filename,
                                       list(image_lists.keys())[predictions[i]]))
+        
+        if class_count == 2:
+          for j, emotion in enumerate(emotion_types):
+            if test_filename.find(emotion) > -1:
+              supplementary_confusion_matrix[j][predictions[i]] += 1
+      
+  def print_and_save_confusion_matrix(confusion_matrix, name):
+    print("Confusion matrix: ")
+    print(confusion_matrix)
+    print("Classification errors by category: ")
+    print(np.sum(confusion_matrix, axis=1))
+    print("Num images misclassified as this category: ")
+    print(np.sum(confusion_matrix, axis=0))
+    np.savetxt(name, confusion_matrix)
 
-  print("Confusion matrix: ")
-  print(confusion_matrix)
-  print("Classification errors by category: ")
-  print(np.sum(confusion_matrix, axis=1))
-  print("Num images misclassified as this category: ")
-  print(np.sum(confusion_matrix, axis=0))
-  np.savetxt('confusion_matrix', confusion_matrix)
+
+  print_and_save_confusion_matrix(confusion_matrix, 'confusion_matrix_' + str(class_count)
+             + '_classes')
 
   normalizer = np.zeros((class_count))
   for label in test_ground_truth:
     normalizer[label] += 1
 
-  normalized_confusion_matrix = confusion_matrix / normalizer
+  normalized_confusion_matrix = confusion_matrix / normalizer[:,None]
 
-  print("Normalized confusion matrix: ")
-  print(normalized_confusion_matrix)
-  print("Classification errors by category (normalized by category size): ")
-  print(np.sum(normalized_confusion_matrix, axis=1))
-  print("Num images misclassified as this category (normalized by category size): ")
-  print(np.sum(normalized_confusion_matrix, axis=0))
-  np.savetxt('normalized_confusion_matrix', normalized_confusion_matrix)
+  print_and_save_confusion_matrix(normalized_confusion_matrix,
+	'normalized_confusion_matrix_' + str(class_count) + '_classes')
+  if class_count == 2:
+    print_and_save_confusion_matrix(supplementary_confusion_matrix,
+        'supplementary_confusion_matrix_' + str(class_count) + '_classes')
+    normalized_supp_matrix = supplementary_confusion_matrix / normalizer
+    print_and_save_confusion_matrix(normalized_supp_matrix,
+        'normalized_supplementary_confusion_matrix_' + str(class_count) + '_classes')
+    
 
 
 def build_eval_session(module_spec, class_count):
@@ -1231,6 +1251,12 @@ if __name__ == '__main__':
       help='How large a learning rate to use when training.'
   )
   parser.add_argument(
+      '--regularization_rate',
+      type=float,
+      default=0.0,
+      help='The magnitude of our L2 regularization.'
+  )
+  parser.add_argument(
       '--testing_percentage',
       type=int,
       default=10,
@@ -1350,5 +1376,10 @@ if __name__ == '__main__':
       type=str,
       default='',
       help='Where to save the exported graph.')
+  parser.add_argument(
+      '--hidden_layer_sizes',
+      type=str,
+      default='',
+      help='Comma-separated list of hidden layer sizes.')
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

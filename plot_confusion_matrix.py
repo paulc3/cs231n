@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 
 confusion_matrix = np.genfromtxt('confusion_matrix')
 normalized_confusion_matrix = np.genfromtxt('normalized_confusion_matrix')
+normalized_supplementary_matrix = np.genfromtxt('normalized_supplementary_matrix')
+supplementary_matrix = np.genfromtxt('supplementary_matrix')
 
 def plot_confusion_matrix(confusion_matrix, name):
   fig = plt.figure(figsize=(10, 10))
@@ -22,9 +24,16 @@ def plot_confusion_matrix(confusion_matrix, name):
 
   classes = ['amusement', 'anger', 'awe', 'contentment', 'disgust', 'excitement', 'fear', 'sadness']
   cb = fig.colorbar(res)
-  plt.xticks(range(len(classes)), classes, rotation=45)
-  plt.yticks(range(len(classes)), classes) 
+  plt.yticks(range(len(classes)), classes)
+  if height == 2:
+    plt.xticks(range(height), ['negative', 'positive'], rotation=45)
+  else:
+    plt.xticks(range(height), classes, rotation=45)
+    
   plt.savefig(name + '.png', format='png')
 
 plot_confusion_matrix(confusion_matrix, 'confusion_matrix')
 plot_confusion_matrix(normalized_confusion_matrix, 'normalized_confusion_matrix')
+plot_confusion_matrix(supplementary_matrix, 'supplementary_matrix')
+plot_confusion_matrix(normalized_supplementary_matrix,
+        'normalized_supplementary_matrix')
