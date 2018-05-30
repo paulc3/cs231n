@@ -132,6 +132,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+import saliency
 
 FLAGS = None
 
@@ -144,6 +145,21 @@ CHECKPOINT_NAME = '/tmp/_retrain_checkpoint_' + str(random.randint(0, 1000000))
 # if it contains any of these ops.
 FAKE_QUANT_OPS = ('FakeQuantWithMinMaxVars',
                   'FakeQuantWithMinMaxVarsPerChannel')
+
+# Utility methods for displaying images. Useful for saliency maps
+def ShowImage(im, title='', ax=None):
+  if ax is None:
+    P.figure()
+  P.axis('off')
+  P.imshow(im)
+  P.title(title)
+
+def ShowGrayscaleImage(im, title='', ax=None):
+  if ax is None:
+    P.figure()
+  P.axis('off')
+  P.imshow(im, cmap=P.cm.gray, vmin=0, vmax=1)
+  P.title(title)
 
 
 def create_image_lists(image_dir, testing_percentage, validation_percentage):
@@ -169,6 +185,8 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
   result = collections.OrderedDict()
   sub_dirs = sorted(x[0] for x in tf.gfile.Walk(image_dir))
   print(sub_dirs)
+  excludedLabels = FLAGS.exclude_labels.split(",")
+
   # The root directory comes first, so skip it.
   is_root_dir = True
   for sub_dir in sub_dirs:
@@ -179,6 +197,9 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     file_list = []
     dir_name = os.path.basename(sub_dir)
     if dir_name == image_dir:
+      continue
+    if dir_name in excludedLabels:
+      print("Skipping images from dir: '{}'".format(dir_name))
       continue
     tf.logging.info("Looking for images in '" + dir_name + "'")
     for extension in extensions:
@@ -229,6 +250,27 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
         'testing': testing_images,
         'validation': validation_images,
     }
+
+
+  # CSmith print stats about the image set
+  marker = '-+-+-' * 3
+  total_train = 0
+  total_val = 0
+  total_test = 0
+  for label, info in result.items():
+    print(marker, label, marker)
+    print('\t Num train images: ', len(info['training']))
+    print('\t Num val images: ', len(info['validation']))
+    print('\t Num test images: ', len(info['testing']))
+    total_train += len(info['training'])
+    total_test += len(info['testing'])
+    total_val += len(info['validation'])
+  print('Total train images: ', total_train)
+  print('Total val images: ', total_val)
+  print('Total test images: ', total_test)
+  print('Total images: ', (total_train + total_val + total_test))
+
+
   return result
 
 
@@ -755,11 +797,14 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
 
   regularizer = tf.contrib.layers.l2_regularizer(scale=FLAGS.regularization_rate)
   layer_sizes = FLAGS.hidden_layer_sizes.split(",")
+  input_mat = bottleneck_input
   for i, layer in enumerate(layer_sizes):
-    hidden_output = tf.layers.dense(
-	bottleneck_input, int(layer), activation=tf.nn.relu, kernel_regularizer=regularizer,
-	name=('hidden_layer_' + str(i)))
-  logits = tf.layers.dense(hidden_output, 8, kernel_regularizer=regularizer, name='scores_layer')
+    input_mat = tf.layers.dense(input_mat, int(layer), activation=tf.nn.relu, \
+      kernel_regularizer=regularizer, name=('hidden_layer_' + str(i)))
+    if FLAGS.dropout_rate > 0 and i < len(layer_sizes)-1: # add dropout between hidden layers, not after last one
+      input_mat = tf.layers.dropout(input_mat, rate=FLAGS.dropout_rate, training=is_training)
+
+  logits = tf.layers.dense(input_mat, 8, kernel_regularizer=regularizer, name='scores_layer')
   final_tensor = tf.nn.softmax(logits, name=final_tensor_name)
 
   # The tf.contrib.quantize functions rewrite the graph in place for
@@ -818,7 +863,7 @@ def add_evaluation_step(result_tensor, ground_truth_tensor):
 
 def run_final_eval(train_session, module_spec, class_count, image_lists,
                    jpeg_data_tensor, decoded_image_tensor,
-                   resized_image_tensor, bottleneck_tensor):
+                   resized_image_tensor, bottleneck_tensor, graph=None):
   """Runs a final evaluation on an eval graph using the test data set.
 
   Args:
@@ -842,7 +887,7 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
                                     bottleneck_tensor, FLAGS.tfhub_module))
 
   (eval_session, _, bottleneck_input, ground_truth_input, evaluation_step,
-   prediction) = build_eval_session(module_spec, class_count)
+   prediction, final_tensor) = build_eval_session(module_spec, class_count)
   test_accuracy, predictions = eval_session.run(
       [evaluation_step, prediction],
       feed_dict={
@@ -858,8 +903,18 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
   # The supplementary confusion matrix is only used for binary classification.
   supplementary_confusion_matrix = np.zeros((8, 2))
 
-  emotion_types = (['amusement', 'anger', 'awe', 'contentment', 'disgust', 'excitement',
-                    'fear', 'sadness']) 
+  # CSmith saliency maps on eval step
+  # print("Creating saliency map")
+  # neuron_selector = tf.placeholder(tf.int32)
+  # y = final_tensor[0][neuron_selector]
+  # gradient_saliency = saliency.GradientSaliency(graph, train_session, y, decoded_image_tensor[:1])
+  # smoothgrad_mask_3d = gradient_saliency.GetSmoothedMask(decoded_image_tensor[0], feed_dict={neuron_selector: predictions[0]})
+  # smoothgrad_mask_grayscale = saliency.VisualizeImageGrayscale(smoothgrad_mask_3d)
+  # ShowGrayscaleImage(smoothgrad_mask_grayscale, title='SmoothGrad')
+  # print("Showing saliency map")
+  # return
+
+  emotion_types = image_lists.keys()
 
   if FLAGS.print_misclassified_test_images:
     tf.logging.info('=== MISCLASSIFIED VALIDATION IMAGES ===')
@@ -875,6 +930,7 @@ def run_final_eval(train_session, module_spec, class_count, image_lists,
               supplementary_confusion_matrix[j][predictions[i]] += 1
       
   def print_and_save_confusion_matrix(confusion_matrix, name):
+    print("Labels in order: ", emotion_types)
     print("Confusion matrix: ")
     print(confusion_matrix)
     print("Classification errors by category: ")
@@ -935,12 +991,12 @@ def build_eval_session(module_spec, class_count):
                                                       ground_truth_input)
 
   return (eval_sess, resized_input_tensor, bottleneck_input, ground_truth_input,
-          evaluation_step, prediction)
+          evaluation_step, prediction, final_tensor)
 
 
 def save_graph_to_file(graph, graph_file_name, module_spec, class_count):
   """Saves an graph to file, creating a valid quantized one if necessary."""
-  sess, _, _, _, _, _ = build_eval_session(module_spec, class_count)
+  sess, _, _, _, _, _, _ = build_eval_session(module_spec, class_count)
   graph = sess.graph
 
   output_graph_def = tf.graph_util.convert_variables_to_constants(
@@ -994,7 +1050,7 @@ def export_model(module_spec, class_count, saved_model_dir):
     saved_model_dir: Directory in which to save exported model and variables.
   """
   # The SavedModel should hold the eval graph.
-  sess, in_image, _, _, _, _ = build_eval_session(module_spec, class_count)
+  sess, in_image, _, _, _, _, _ = build_eval_session(module_spec, class_count)
   graph = sess.graph
   with graph.as_default():
     inputs = {'image': tf.saved_model.utils.build_tensor_info(in_image)}
@@ -1182,7 +1238,7 @@ def main(_):
     # some new images we haven't used before.
     run_final_eval(sess, module_spec, class_count, image_lists,
                    jpeg_data_tensor, decoded_image_tensor, resized_image_tensor,
-                   bottleneck_tensor)
+                   bottleneck_tensor, graph)
 
     # Write out the trained graph and labels with the weights stored as
     # constants.
@@ -1241,7 +1297,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--how_many_training_steps',
       type=int,
-      default=4000,
+      default=3000,
       help='How many training steps to run before ending.'
   )
   parser.add_argument(
@@ -1381,5 +1437,15 @@ if __name__ == '__main__':
       type=str,
       default='',
       help='Comma-separated list of hidden layer sizes.')
+  parser.add_argument(
+      '--exclude_labels',
+      type=str,
+      default='',
+      help='Comma-separated list of labels to exclude.')
+  parser.add_argument(
+      '--dropout_rate',
+      type=float,
+      default=0,
+      help='Dropout rate, a float between 0 and 1.')
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
