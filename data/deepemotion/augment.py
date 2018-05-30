@@ -2,7 +2,7 @@ import random
 import os
 import numpy as np
 from skimage import io
-from scipy.ndimage.filters import gaussian_filter
+from skimage.filters import gaussian
 from PIL import Image
 
 MAIN_DIR = './raw/'
@@ -19,7 +19,7 @@ for label_subdir in LABELS_SUBDIRS:
 		original = io.imread(dir_path + image_name)
 		transformation = random.choice(transformations)
 		if transformation == 'BLURRED':
-			new_image = gaussian_filter(original, sigma=5)
+			new_image = gaussian(original, sigma=5, multichannel=True)
 		else:
 			new_image = np.fliplr(original)
 
