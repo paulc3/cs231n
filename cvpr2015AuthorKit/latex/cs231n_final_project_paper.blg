@@ -5,45 +5,45 @@ The style file: ieee.bst
 Database file #1: vision_citations.bib
 Warning--empty journal in imagenet
 Warning--empty journal in oasis
-You've used 10 entries,
+You've used 11 entries,
             2120 wiz_defined-function locations,
-            559 strings with 5862 characters,
-and the built_in function-call counts, 3648 in all, are:
-= -- 352
-> -- 225
+            568 strings with 6092 characters,
+and the built_in function-call counts, 3998 in all, are:
+= -- 387
+> -- 243
 < -- 2
-+ -- 89
-- -- 78
-* -- 268
-:= -- 635
-add.period$ -- 31
-call.type$ -- 10
-change.case$ -- 69
++ -- 97
+- -- 84
+* -- 299
+:= -- 694
+add.period$ -- 34
+call.type$ -- 11
+change.case$ -- 75
 chr.to.int$ -- 0
-cite$ -- 12
-duplicate$ -- 128
-empty$ -- 227
-format.name$ -- 78
-if$ -- 738
+cite$ -- 13
+duplicate$ -- 139
+empty$ -- 252
+format.name$ -- 84
+if$ -- 807
 int.to.chr$ -- 0
-int.to.str$ -- 10
-missing$ -- 10
-newline$ -- 53
-num.names$ -- 20
-pop$ -- 57
+int.to.str$ -- 11
+missing$ -- 11
+newline$ -- 58
+num.names$ -- 22
+pop$ -- 61
 preamble$ -- 1
-purify$ -- 59
+purify$ -- 64
 quote$ -- 0
-skip$ -- 107
+skip$ -- 114
 stack$ -- 0
-substring$ -- 162
-swap$ -- 30
+substring$ -- 187
+swap$ -- 31
 text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 40
+type$ -- 44
 warning$ -- 2
-while$ -- 28
-width$ -- 12
-write$ -- 113
+while$ -- 32
+width$ -- 13
+write$ -- 124
 (There were 2 warnings)

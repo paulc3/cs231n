@@ -1,5 +1,11 @@
 \begin{thebibliography}{10}\itemsep=-1pt
 
+\bibitem{classimbalance}
+G.~E. A. P.~A. Batista, R.~C. Prati, and M.~C. Monard.
+\newblock A study of the behavior of several methods for balancing machine
+  learning training data.
+\newblock {\em SIGKDD Explor. Newsl.}, 6(1):20--29, June 2004.
+
 \bibitem{transferlearning}
 M.~Huh, P.~Agrawal, and A.~A. Efros.
 \newblock What makes imagenet good for transfer learning?
