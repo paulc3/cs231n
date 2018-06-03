@@ -1,0 +1,54 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Include other packages here, before hyperref.
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[breaklinks=true,bookmarks=false]{hyperref}
+
+\cvprfinalcopy
+
+% Pages are numbered in submission mode, and unnumbered in camera-ready
+%\ifcvprfinal\pagestyle{empty}\fi
+\setcounter{page}{1}
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{Learning to Feel: Training a CNN to recognize emotion}
+
+\author{Paul Carroll, Connor Smith, Frank Zheng, William Jarrold, Mana Lewis\footnotemark \\
+Stanford University\\
+{\tt\small \{paulc3, csmith95, fzheng\}@stanford.edu}\\
+{\tt\small william.jarrold@gmail.com}\\
+{\tt\small mana@chezmana.com}
+}
+
+\maketitle
+\footnotetext{William and Mana helpfully provided data and links to academic papers. Neither is enrolled in CS231N.}
+%\thispagestyle{empty}
+
+%%%%%%%%% ABSTRACT
+\begin{abstract}
+In the last decade, the development of convolutional neural nets (CNNs) has made it possible for computers to accurately identify the objects in particular photos. Now that object recognition is working well, it seems natural to ask the question of whether we can use CNNs to recognize higher-level concepts in photos. In this paper, we apply a modified CNN based on Inception-Resnet to the task of classifying the emotion evoked by particular images. We begin by training our network to classify photos as having positive or negative valence. Next, we set our network a harder challenge, training it to classify photos as belonging to one of eight emotional states. We use a dataset of 13K photos collected from social networks. For our valence classification problem, we achieve an accuracy of 91\%. For our eight-fold problem, we achieve a top-one classification accuracy of 69\%.
+\end{abstract}
+
+%%%%%%%%% BODY TEXT
+\section{Introduction}
+
+
+
+
+{\small
+\bibliographystyle{ieee}
+\bibliography{egbib}
+}
+
+\end{document}

@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2016)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: cs231n_final_project_paper.aux
+The style file: ieee.bst
+Database file #1: vision_citations.bib
+Warning--empty journal in imagenet
+Warning--empty journal in oasis
+You've used 10 entries,
+            2120 wiz_defined-function locations,
+            559 strings with 5862 characters,
+and the built_in function-call counts, 3648 in all, are:
+= -- 352
+> -- 225
+< -- 2
++ -- 89
+- -- 78
+* -- 268
+:= -- 635
+add.period$ -- 31
+call.type$ -- 10
+change.case$ -- 69
+chr.to.int$ -- 0
+cite$ -- 12
+duplicate$ -- 128
+empty$ -- 227
+format.name$ -- 78
+if$ -- 738
+int.to.chr$ -- 0
+int.to.str$ -- 10
+missing$ -- 10
+newline$ -- 53
+num.names$ -- 20
+pop$ -- 57
+preamble$ -- 1
+purify$ -- 59
+quote$ -- 0
+skip$ -- 107
+stack$ -- 0
+substring$ -- 162
+swap$ -- 30
+text.length$ -- 2
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 40
+warning$ -- 2
+while$ -- 28
+width$ -- 12
+write$ -- 113
+(There were 2 warnings)

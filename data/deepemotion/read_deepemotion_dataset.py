@@ -8,6 +8,8 @@ import urllib
 import tensorflow as tf
 from PIL import Image
 
+tf.enable_eager_execution()
+
 # Positive emotions first, then negative emotions. This dict shouldn't be
 # modified.
 EMOTION_TO_LABEL = {
@@ -32,22 +34,27 @@ def download_image(url):
 		raise ValueError('invalid image dims: ', image.shape) # bad dims, raise err to be caught by caller
 	return image
 
-def write_to_tfrecord_file(image, label):
-	def _int64_feature(value):
-  		return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+# def write_to_tfrecord_file(image, label):
+# 	def _int64_feature(value):
+#   		return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
-	def _bytes_feature(value):
-  		return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+# 	def _bytes_feature(value):
+#   		return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
-	encoded_image_str = tf.image.encode_jpeg(image).eval(session=tf.Session())
-	H, W, C = image.shape
-	example = tf.train.Example(features=tf.train.Features(feature={
-	    # 'height': _int64_feature(H),
-	    # 'width': _int64_feature(W),
-	    # 'depth': _int64_feature(C),
-	    'label': _int64_feature(int(label)),
-	    'image_raw': _bytes_feature(encoded_image_str)}))
-	writer.write(example.SerializeToString())
+#   	g = tf.Graph()
+#   	with g.as_default():
+#   		data_t = tf.placeholder(tf.uint8)
+#   		encoded_image_str = tf.image.encode_jpeg(image)
+#   		init = tf.initialize_all_variables()
+#   		example = tf.train.Example(features=tf.train.Features(feature={
+# 	    	'label': _int64_feature(int(label)),
+# 	    	'image_raw': _bytes_feature(encoded_image_str)}))
+
+#   	with tf.Session(graph=g) as sess:
+#   		sess.run(init)
+#   		data_np = sess.run(example, feed_dict={ data_t: image })
+
+# 	writer.write(example.SerializeToString())
 
 insufficent_upvotes = 0
 sufficient_upvotes = 0
@@ -62,10 +69,6 @@ prev_emotion = None
 with open('sorted_raw_data.csv', 'r') as file:
 	reader = csv.reader(file)
 	for emotion, url, downvotes, upvotes in reader:
-
-		if not (emotion == 'sadness' or emotion == 'fear'): continue
-		if instances_of_label[emotion] > 500: continue
-
 		if not has_sufficient_upvotes(float(downvotes), float(upvotes)):
 			insufficent_upvotes += 1
 			continue
@@ -78,6 +81,9 @@ with open('sorted_raw_data.csv', 'r') as file:
 		try:
 			# creates a numpy array shaped [H, W, C]
 			image = download_image(url)
+			print image.dtype
+			assert False
+			
 			good_urls += 1
 			total_height += image.shape[0]
 			total_width += image.shape[1]

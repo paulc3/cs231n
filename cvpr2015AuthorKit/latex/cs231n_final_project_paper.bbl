@@ -1,0 +1,63 @@
+\begin{thebibliography}{10}\itemsep=-1pt
+
+\bibitem{transferlearning}
+M.~Huh, P.~Agrawal, and A.~A. Efros.
+\newblock What makes imagenet good for transfer learning?
+\newblock {\em CoRR}, abs/1608.08614, 2016.
+
+\bibitem{methodologyproposed}
+W.~Jarrold and P.~Z. Yeh.
+\newblock The social-emotional turing challenge.
+\newblock {\em AI Magazine}, 37(1), 2016.
+
+\bibitem{imagenet}
+A.~Krizhevsky, I.~Sutskever, and G.~E. Hinton.
+\newblock Imagenet classification with deep convolutional neural networks.
+\newblock pages 1097--1105, 2012.
+
+\bibitem{oasis}
+B.~Kurdi, S.~Lozano, and M.~Banaji.
+\newblock Introducing the open affective standardized image set (oasis).
+\newblock 49, 02 2016.
+
+\bibitem{transferexampleprimary}
+M.~Oquab, L.~Bottou, I.~Laptev, and J.~Sivic.
+\newblock Learning and transferring mid-level image representations using
+  convolutional neural networks.
+\newblock In {\em Proceedings of the 2014 IEEE Conference on Computer Vision
+  and Pattern Recognition}, CVPR '14, pages 1717--1724, Washington, DC, USA,
+  2014. IEEE Computer Society.
+
+\bibitem{earlyeq}
+R.~W. Picard, E.~Vyzas, and J.~Healey.
+\newblock Toward machine emotional intelligence: Analysis of affective
+  physiological state.
+\newblock {\em IEEE Trans. Pattern Anal. Mach. Intell.}, 23(10):1175--1191,
+  Oct. 2001.
+
+\bibitem{transferexample2}
+H.~Shin, H.~R. Roth, M.~Gao, L.~Lu, Z.~Xu, I.~Nogues, J.~Yao, D.~J. Mollura,
+  and R.~M. Summers.
+\newblock Deep convolutional neural networks for computer-aided detection:
+  {CNN} architectures, dataset characteristics and transfer learning.
+\newblock {\em CoRR}, abs/1602.03409, 2016.
+
+\bibitem{inceptionresnet}
+C.~Szegedy, S.~Ioffe, and V.~Vanhoucke.
+\newblock Inception-v4, inception-resnet and the impact of residual connections
+  on learning.
+\newblock {\em CoRR}, abs/1602.07261, 2016.
+
+\bibitem{transferexample1}
+M.~Xie, N.~Jean, M.~Burke, D.~B. Lobell, and S.~Ermon.
+\newblock Transfer learning from deep features for remote sensing and poverty
+  mapping.
+\newblock {\em CoRR}, abs/1510.00098, 2015.
+
+\bibitem{ourdata}
+Q.~You, J.~Luo, H.~Jin, and J.~Yang.
+\newblock Building a large scale dataset for image emotion recognition: The
+  fine print and the benchmark.
+\newblock {\em CoRR}, abs/1605.02677, 2016.
+
+\end{thebibliography}
