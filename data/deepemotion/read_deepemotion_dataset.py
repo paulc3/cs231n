@@ -7,26 +7,27 @@ from skimage import io
 import urllib
 import tensorflow as tf
 from PIL import Image
+import os
 
 tf.enable_eager_execution()
 
 # Positive emotions first, then negative emotions. This dict shouldn't be
 # modified.
 EMOTION_TO_LABEL = {
-	'amusement': 0,
-	'awe': 1,
-	'contentment': 2,
-	'excitement': 3,
-	'anger': 4,
-	'disgust': 5,
-	'fear': 6,
-	'sadness': 7
+        'amusement': 0,
+        'awe': 1,
+        'contentment': 2,
+        'excitement': 3,
+        'anger': 4,
+        'disgust': 5,
+        'fear': 6,
+        'sadness': 7
 }
 
 disk_filepath = "./raw"
 
 def has_sufficient_upvotes(downvotes, upvotes):
-	return upvotes + downvotes > 0 and upvotes / (upvotes + downvotes) > 0.75
+        return upvotes + downvotes > 0 and upvotes / (upvotes + downvotes) > 0.75
 
 def download_image(url):
 	image = io.imread(url)
