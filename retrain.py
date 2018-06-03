@@ -132,7 +132,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-import saliency
+# import saliency
 
 FLAGS = None
 
@@ -219,6 +219,33 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     training_images = []
     testing_images = []
     validation_images = []
+    
+    numFiles = len(file_list)
+    numAdded = 0
+    
+    training_percentage = 1 - validation_percentage/100.0 - testing_percentage/100.0
+    
+    for file_name in file_list:
+        # Adding in both blurred/flipped and original
+        base_name = os.path.basename(file_name)
+        if "FLIPPED" in base_name or "BLURRED" in base_name:
+            if random.uniform(0, 1) <= training_percentage:
+                training_images.append(base_name)
+                numAdded += 1
+                if base_name[8:] not in training_images:
+                    training_images.append(base_name[8:])
+                    numAdded += 1     
+    print("number of files: " + str(numFiles))
+    print("number added: " + str(numAdded))
+    print("Validation accuracy before: " + str(validation_percentage))
+    
+    new_validation_percentage = validation_percentage * numFiles/(numFiles - numAdded)
+    new_testing_percentage = testing_percentage * numFiles/(numFiles - numAdded)
+    
+    print("number validated: " + str(new_validation_percentage))
+    print(new_testing_percentage)
+    
+#     numAdded = 0
     for file_name in file_list:
       base_name = os.path.basename(file_name)
       # We want to ignore anything after '_nohash_' in the file name when
@@ -234,16 +261,21 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
       # To do that, we need a stable way of deciding based on just the file name
       # itself, so we do a hash of that and then use that to generate a
       # probability value that we use to assign it.
+#       if numAdded >= 1000:
+#         break
       hash_name_hashed = hashlib.sha1(tf.compat.as_bytes(hash_name)).hexdigest()
       percentage_hash = ((int(hash_name_hashed, 16) %
                           (MAX_NUM_IMAGES_PER_CLASS + 1)) *
                          (100.0 / MAX_NUM_IMAGES_PER_CLASS))
-      if percentage_hash < validation_percentage:
-        validation_images.append(base_name)
-      elif percentage_hash < (testing_percentage + validation_percentage):
-        testing_images.append(base_name)
-      else:
-        training_images.append(base_name)
+      if base_name not in training_images and "FLIPPED" not in base_name and "BLURRED" not in base_name:
+          if percentage_hash < new_validation_percentage:
+            validation_images.append(base_name)
+          elif percentage_hash < (new_testing_percentage + new_validation_percentage):
+            testing_images.append(base_name)
+          else:
+            training_images.append(base_name)
+#             numAdded += 1
+            
     result[label_name] = {
         'dir': dir_name,
         'training': training_images,
