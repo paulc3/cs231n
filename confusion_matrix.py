@@ -1,10 +1,9 @@
 import numpy as np
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-confusion_matrix = np.genfromtxt('confusion_matrix_2_classes')
-normalized_confusion_matrix = np.genfromtxt('normalized_confusion_matrix_2_classes')
-normalized_supplementary_matrix = np.genfromtxt('normalized_supplementary_matrix_2_classes')
-supplementary_matrix = np.genfromtxt('supplementary_matrix_2_classes')
+confusion_matrix = np.genfromtxt('confusion_matrix_8_classes')
 
 def plot_confusion_matrix(confusion_matrix, name):
   fig = plt.figure(figsize=(10, 10))
@@ -16,24 +15,23 @@ def plot_confusion_matrix(confusion_matrix, name):
   
   width, height = confusion_matrix.shape
   
-  for x in xrange(width):
-    for y in xrange(height):
+  for x in range(width):
+    for y in range(height):
       ax.annotate("%.2f" % confusion_matrix[x][y], xy=(y, x), 
                   horizontalalignment='center',
-                  verticalalignment='center')
+                  verticalalignment='center', color='white', fontsize=14, fontweight='bold')
 
-  classes = ['amusement', 'anger', 'awe', 'contentment', 'disgust', 'excitement', 'fear', 'sadness']
-  cb = fig.colorbar(res)
-  plt.yticks(range(len(classes)), classes)
   if height == 2:
+    classes = ['positive', 'negative']
+    cb = fig.colorbar(res)
+    plt.yticks(range(len(classes)), classes)
     plt.xticks(range(height), ['negative', 'positive'], rotation=45)
   else:
+    classes = ['amusement', 'anger', 'awe', 'contentment', 'disgust', 'excitement', 'fear', 'sadness']
+    cb = fig.colorbar(res)
+    plt.yticks(range(len(classes)), classes)
     plt.xticks(range(height), classes, rotation=45)
     
   plt.savefig(name + '.png', format='png')
 
 plot_confusion_matrix(confusion_matrix, 'confusion_matrix')
-plot_confusion_matrix(normalized_confusion_matrix, 'normalized_confusion_matrix')
-plot_confusion_matrix(supplementary_matrix, 'supplementary_matrix')
-plot_confusion_matrix(normalized_supplementary_matrix,
-        'normalized_supplementary_matrix')
